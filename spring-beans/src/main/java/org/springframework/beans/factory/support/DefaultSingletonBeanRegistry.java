@@ -224,31 +224,34 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 			 * 将锁放在 allowEarlyReference 判断之后，避免调用 getSingleton(beanName, false) 的时候获取到锁
 			 */
 			if (allowEarlyReference) {
-				// 加锁避免
 				synchronized (this.singletonObjects) {
-					/**
-					 * 尝试去二级缓存中获取对象(二级缓存中的对象是一个早期对象)
-					 * 何为早期对象:就是bean刚刚调用了构造方法，还来不及给bean的属性进行赋值的对象(纯净态)
-					 * 就是早期对象
-					 */
-					singletonObject = this.earlySingletonObjects.get(beanName);
+					// 保持读取的一致性
+					singletonObject = this.singletonObjects.get(beanName);
 					if (singletonObject == null) {
 						/**
-						 * 直接从三级缓存中获取 ObjectFactory对象 这个对接就是用来解决循环依赖的关键所在
-						 * 在ioc后期的过程中,当bean调用了构造方法的时候,把早期对象包裹成一个ObjectFactory
-						 * 暴露到三级缓存中
+						 * 尝试去二级缓存中获取对象(二级缓存中的对象是一个早期对象)
+						 * 何为早期对象:就是bean刚刚调用了构造方法，还来不及给bean的属性进行赋值的对象(纯净态)
+						 * 就是早期对象
 						 */
-						ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
-						if (singletonFactory != null) {
+						singletonObject = this.earlySingletonObjects.get(beanName);
+						if (singletonObject == null) {
 							/**
-							 * 在这里通过暴露的 ObjectFactory 包装对象中,通过调用他的getObject()来获取早期对象
-							 * 在这个环节中会调用到 getEarlyBeanReference()来进行后置处理
+							 * 直接从三级缓存中获取 ObjectFactory对象 这个对接就是用来解决循环依赖的关键所在
+							 * 在ioc后期的过程中,当bean调用了构造方法的时候,把早期对象包裹成一个ObjectFactory
+							 * 暴露到三级缓存中
 							 */
-							singletonObject = singletonFactory.getObject();
-							// 把早期对象放置在二级缓存
-							this.earlySingletonObjects.put(beanName, singletonObject);
-							// ObjectFactory 包装对象从三级缓存中删除掉
-							this.singletonFactories.remove(beanName);
+							ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+							if (singletonFactory != null) {
+								/**
+								 * 在这里通过暴露的 ObjectFactory 包装对象中,通过调用他的getObject()来获取早期对象
+								 * 在这个环节中会调用到 getEarlyBeanReference()来进行后置处理
+								 */
+								singletonObject = singletonFactory.getObject();
+								// 把早期对象放置在二级缓存
+								this.earlySingletonObjects.put(beanName, singletonObject);
+								// ObjectFactory 包装对象从三级缓存中删除掉
+								this.singletonFactories.remove(beanName);
+							}
 						}
 					}
 				}
