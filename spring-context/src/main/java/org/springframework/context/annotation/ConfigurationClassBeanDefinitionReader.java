@@ -116,6 +116,7 @@ class ConfigurationClassBeanDefinitionReader {
 	 */
 	public void loadBeanDefinitions(Set<ConfigurationClass> configurationModel) {
 		TrackedConditionEvaluator trackedConditionEvaluator = new TrackedConditionEvaluator();
+		// 注册配置类到容器中
 		for (ConfigurationClass configClass : configurationModel) {
 			loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);
 		}
@@ -137,14 +138,20 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		// 判断配置类是不是通过 @Import 导入进来的
 		if (configClass.isImported()) {
+			// 注册根据 @Import 导入的 Bean 定义
 			registerBeanDefinitionForImportedConfigurationClass(configClass);
 		}
+		// 是不是通过 @Bean 导入进来的组件
 		for (BeanMethod beanMethod : configClass.getBeanMethods()) {
+			// 加载从 @Bean 注解的方法标识的 Bean 定义
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
 
+		// 加载从 @ImportResource 引入进来的 Bean 定义
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+		// 加载从 ImportBeanDefinitionRegistrar 引入的 Bean 定义
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
@@ -152,16 +159,24 @@ class ConfigurationClassBeanDefinitionReader {
 	 * Register the {@link Configuration} class itself as a bean definition.
 	 */
 	private void registerBeanDefinitionForImportedConfigurationClass(ConfigurationClass configClass) {
+		// 获取配置类的源信息
 		AnnotationMetadata metadata = configClass.getMetadata();
+		// 构建为 bean 定义
 		AnnotatedGenericBeanDefinition configBeanDef = new AnnotatedGenericBeanDefinition(metadata);
 
+		// 设置他的 scope
 		ScopeMetadata scopeMetadata = scopeMetadataResolver.resolveScopeMetadata(configBeanDef);
 		configBeanDef.setScope(scopeMetadata.getScopeName());
+
+		// 获取 bean 的名称
 		String configBeanName = this.importBeanNameGenerator.generateBeanName(configBeanDef, this.registry);
+		// 处理 JRS250 公共注解
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(configBeanDef, metadata);
 
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(configBeanDef, configBeanName);
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+
+		// 注册 bean 定义到容器中
 		this.registry.registerBeanDefinition(definitionHolder.getBeanName(), definitionHolder.getBeanDefinition());
 		configClass.setBeanName(configBeanName);
 
@@ -176,11 +191,15 @@ class ConfigurationClassBeanDefinitionReader {
 	 */
 	@SuppressWarnings("deprecation")  // for RequiredAnnotationBeanPostProcessor.SKIP_REQUIRED_CHECK_ATTRIBUTE
 	private void loadBeanDefinitionsForBeanMethod(BeanMethod beanMethod) {
+		// 获取到配置类
 		ConfigurationClass configClass = beanMethod.getConfigurationClass();
+		// 获取 @Bean 方法的元信息
 		MethodMetadata metadata = beanMethod.getMetadata();
+		// 获取方法名
 		String methodName = metadata.getMethodName();
 
 		// Do we need to mark the bean as skipped by its condition?
+		// 判断当前方法是否要跳过
 		if (this.conditionEvaluator.shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN)) {
 			configClass.skippedBeanMethods.add(methodName);
 			return;
@@ -189,19 +208,23 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		// 获取 @Bean 注解的属性
 		AnnotationAttributes bean = AnnotationConfigUtils.attributesFor(metadata, Bean.class);
 		Assert.state(bean != null, "No @Bean annotation attributes");
 
 		// Consider name and any aliases
+		// 获取 beanName，如果 @Bean 注解没有设置，使用方法名作为 beanName
 		List<String> names = new ArrayList<>(Arrays.asList(bean.getStringArray("name")));
 		String beanName = (!names.isEmpty() ? names.remove(0) : methodName);
 
 		// Register aliases even when overridden
+		// 注册别名
 		for (String alias : names) {
 			this.registry.registerAlias(beanName, alias);
 		}
 
 		// Has this effectively been overridden before (e.g. via XML)?
+		// 校验 beanName 的唯一性（判断当前 beanName 与 ConfigurationClass 的 beanName 是否相同）
 		if (isOverriddenByExistingDefinition(beanMethod, beanName)) {
 			if (beanName.equals(beanMethod.getConfigurationClass().getBeanName())) {
 				throw new BeanDefinitionStoreException(beanMethod.getConfigurationClass().getResource().getDescription(),
@@ -211,11 +234,13 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		// 包装成配置类 Bean 定义
 		ConfigurationClassBeanDefinition beanDef = new ConfigurationClassBeanDefinition(configClass, metadata, beanName);
 		beanDef.setSource(this.sourceExtractor.extractSource(metadata, configClass.getResource()));
 
 		if (metadata.isStatic()) {
 			// static @Bean method
+			// @Bean 标注在静态方法的处理
 			if (configClass.getMetadata() instanceof StandardAnnotationMetadata) {
 				beanDef.setBeanClass(((StandardAnnotationMetadata) configClass.getMetadata()).getIntrospectedClass());
 			}
@@ -226,6 +251,7 @@ class ConfigurationClassBeanDefinitionReader {
 		}
 		else {
 			// instance @Bean method
+			// @Bean 标注在实例方法的处理: 类似于 xml 的实例工厂方式对类进行实例化，在此设置工厂名
 			beanDef.setFactoryBeanName(configClass.getBeanName());
 			beanDef.setUniqueFactoryMethodName(methodName);
 		}
@@ -283,6 +309,7 @@ class ConfigurationClassBeanDefinitionReader {
 			logger.trace(String.format("Registering bean definition for @Bean method %s.%s()",
 					configClass.getMetadata().getClassName(), beanName));
 		}
+		// 注册 bean 定义
 		this.registry.registerBeanDefinition(beanName, beanDefToRegister);
 	}
 

@@ -226,10 +226,13 @@ public abstract class AbstractApplicationEventMulticaster
 		// Add programmatically registered listeners, including ones coming
 		// from ApplicationListenerDetector (singleton beans and inner beans).
 		for (ApplicationListener<?> listener : listeners) {
+			// 当前监听器是否 监听的发布事件
 			if (supportsEvent(listener, eventType, sourceType)) {
+				// 缓存也没有
 				if (retriever != null) {
 					retriever.applicationListeners.add(listener);
 				}
+				// 是就加入到 allListeners
 				allListeners.add(listener);
 			}
 		}
@@ -241,6 +244,7 @@ public abstract class AbstractApplicationEventMulticaster
 			for (String listenerBeanName : listenerBeans) {
 				try {
 					if (supportsEvent(beanFactory, listenerBeanName, eventType)) {
+						// 懒加载的监听器在这里会创建
 						ApplicationListener<?> listener =
 								beanFactory.getBean(listenerBeanName, ApplicationListener.class);
 						if (!allListeners.contains(listener) && supportsEvent(listener, eventType, sourceType)) {

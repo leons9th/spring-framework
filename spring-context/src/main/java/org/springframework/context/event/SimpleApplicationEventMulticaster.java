@@ -130,12 +130,16 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	@Override
 	public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableType eventType) {
 		ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));
+		// 从多播器中获取出所有的监听器
 		Executor executor = getTaskExecutor();
 		for (ApplicationListener<?> listener : getApplicationListeners(event, type)) {
+			// 判断多播器中是否支持异步多播的
 			if (executor != null) {
+				// 异步播发事件
 				executor.execute(() -> invokeListener(listener, event));
 			}
 			else {
+				// 同步播发
 				invokeListener(listener, event);
 			}
 		}
