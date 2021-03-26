@@ -219,40 +219,36 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		 * IOC 容器初始化加载单实例 bean 的时候第一次进来的时候 该 list 中一般返回空, 但是循环依赖的时候可以满足该条件
 		 */
 		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
-			singletonObject = this.earlySingletonObjects.get(beanName);
 			/**
-			 * 二级缓存中也没有获取到对象, allowEarlyReference 为 true (参数是有上一个方法传递进来的 true)
+			 * allowEarlyReference 为 true (参数是有上一个方法传递进来的 true)
+			 * 将锁放在 allowEarlyReference 判断之后，避免调用 getSingleton(beanName, false) 的时候获取到锁
 			 */
-			if (singletonObject == null && allowEarlyReference) {
+			if (allowEarlyReference) {
+				// 加锁避免
 				synchronized (this.singletonObjects) {
-					// Consistent creation of early reference within full singleton lock
 					/**
 					 * 尝试去二级缓存中获取对象(二级缓存中的对象是一个早期对象)
 					 * 何为早期对象:就是bean刚刚调用了构造方法，还来不及给bean的属性进行赋值的对象(纯净态)
 					 * 就是早期对象
 					 */
-					singletonObject = this.singletonObjects.get(beanName);
-
+					singletonObject = this.earlySingletonObjects.get(beanName);
 					if (singletonObject == null) {
-						singletonObject = this.earlySingletonObjects.get(beanName);
-						if (singletonObject == null) {
+						/**
+						 * 直接从三级缓存中获取 ObjectFactory对象 这个对接就是用来解决循环依赖的关键所在
+						 * 在ioc后期的过程中,当bean调用了构造方法的时候,把早期对象包裹成一个ObjectFactory
+						 * 暴露到三级缓存中
+						 */
+						ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+						if (singletonFactory != null) {
 							/**
-							 * 直接从三级缓存中获取 ObjectFactory对象 这个对接就是用来解决循环依赖的关键所在
-							 * 在ioc后期的过程中,当bean调用了构造方法的时候,把早期对象包裹成一个ObjectFactory
-							 * 暴露到三级缓存中
+							 * 在这里通过暴露的 ObjectFactory 包装对象中,通过调用他的getObject()来获取早期对象
+							 * 在这个环节中会调用到 getEarlyBeanReference()来进行后置处理
 							 */
-							ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
-							if (singletonFactory != null) {
-								/**
-								 * 在这里通过暴露的 ObjectFactory 包装对象中,通过调用他的getObject()来获取早期对象
-								 * 在这个环节中会调用到 getEarlyBeanReference()来进行后置处理
-								 */
-								singletonObject = singletonFactory.getObject();
-								// 把早期对象放置在二级缓存
-								this.earlySingletonObjects.put(beanName, singletonObject);
-								// ObjectFactory 包装对象从三级缓存中删除掉
-								this.singletonFactories.remove(beanName);
-							}
+							singletonObject = singletonFactory.getObject();
+							// 把早期对象放置在二级缓存
+							this.earlySingletonObjects.put(beanName, singletonObject);
+							// ObjectFactory 包装对象从三级缓存中删除掉
+							this.singletonFactories.remove(beanName);
 						}
 					}
 				}
