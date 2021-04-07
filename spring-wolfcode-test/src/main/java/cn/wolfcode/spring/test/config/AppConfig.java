@@ -3,24 +3,33 @@ package cn.wolfcode.spring.test.config;
 import cn.wolfcode.spring.test.domain.User;
 import cn.wolfcode.spring.test.event.PayFailedEvent;
 import cn.wolfcode.spring.test.event.PaySuccessEvent;
-import cn.wolfcode.spring.test.listener.PaySuccessListener;
 import cn.wolfcode.spring.test.service.IUserService;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import com.alibaba.druid.pool.DruidDataSource;
+import org.springframework.context.annotation.*;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import javax.sql.DataSource;
 import java.math.BigDecimal;
 
+/**
+ * 启用 aspectj 代理
+ *
+ * @author hox
+ */
+@EnableTransactionManagement
+@EnableAspectJAutoProxy
+@Configuration
+@ComponentScan(basePackages = "cn.wolfcode.spring.test")
 /**
  * @author Leon
  * @date 2021/3/16
  */
-@Configuration
-@ComponentScan(basePackages = "cn.wolfcode.spring.test")
 public class AppConfig {
 //
 //	@Bean(initMethod = "init", destroyMethod = "destroy")
@@ -34,6 +43,28 @@ public class AppConfig {
 //		userService.setUser(user());
 //		return userService;
 //	}
+
+	@Bean
+	public JdbcTemplate jdbcTemplate(DataSource dataSource) {
+		return new JdbcTemplate(dataSource);
+	}
+
+	@Bean
+	public DataSource dataSource() {
+		DruidDataSource dataSource = new DruidDataSource();
+		dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+		dataSource.setUrl("jdbc:mysql://localhost:3306/spring_test");
+		dataSource.setUsername("root");
+		dataSource.setPassword("admin");
+		return dataSource;
+	}
+
+	@Bean
+	public PlatformTransactionManager transactionManager(DataSource dataSource) {
+		DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
+		dataSourceTransactionManager.setDataSource(dataSource);
+		return dataSourceTransactionManager;
+	}
 
 	@Bean
 	public ApplicationEventMulticaster applicationEventMulticaster() {
@@ -61,7 +92,6 @@ public class AppConfig {
 		IUserService bean1 = ctx.getBean(IUserService.class);
 		System.out.println("=================>>>>>>" + (bean == bean1));
 		bean.test();
-		bean1.test();
 
 		// 自己添加的注册器
 //		ctx.addApplicationListener(new PaySuccessListener());

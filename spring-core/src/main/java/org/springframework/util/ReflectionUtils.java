@@ -355,12 +355,15 @@ public abstract class ReflectionUtils {
 	 */
 	public static void doWithMethods(Class<?> clazz, MethodCallback mc, @Nullable MethodFilter mf) {
 		// Keep backing up the inheritance hierarchy.
+		// 根据 bean 的 clazz 对象获取到声明的方法
 		Method[] methods = getDeclaredMethods(clazz, false);
+		// 循环所有的方法
 		for (Method method : methods) {
 			if (mf != null && !mf.matches(method)) {
 				continue;
 			}
 			try {
+				// 方法进行回调
 				mc.doWith(method);
 			}
 			catch (IllegalAccessException ex) {

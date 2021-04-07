@@ -516,9 +516,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
 			/**
 			 * 第1个 bean 后置处理器
-			 * 通过 bean 的后置处理器来进行后置处理生成代理对象, 一般情况下在此处不会生成代理对象为什么不能生成代理对象,
-			 * 不管是 jdk 代理还是 cglib 代理都不会在此处进行代理，因为真实的对象没有生成,所以在这里不会生成代理对象，
-			 * 那么在这一步是 aop 和事务的关键，因为在这里解析 aop 切面信息进行缓存
+			 * 通过 bean 的后置处理器来进行后置处理生成代理对象, 一般情况下在此处不会生成代理对象
+			 * 为什么不能生成代理对象?
+			 * 不管是 jdk 代理还是 cglib 代理都不会在此处进行代理, 因为真实的对象没有生成, 所以在这里不会生成代理对象,
+			 * 在这一步是 aop 和事务的关键, 因为在这里解析 aop 切面信息进行缓存
 			 */
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
@@ -1213,16 +1214,15 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		 * 获取容器中的所有后置处理器
 		 */
 		for (BeanPostProcessor bp : getBeanPostProcessors()) {
-			//判断后置处理器是不是InstantiationAwareBeanPostProcessor
+			// 判断后置处理器是不是 InstantiationAwareBeanPostProcessor
 			if (bp instanceof InstantiationAwareBeanPostProcessor) {
-				//把BeanPostProcessor强制转为InstantiationAwareBeanPostProcessor
+				// 把 BeanPostProcessor 强制转为 InstantiationAwareBeanPostProcessor
 				InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
 				/**
 				 * 【很重要】
-				 *  AOP @EnableAspectJAutoProxy 为容器中导入了 AnnotationAwareAspectJAutoProxyCreator
+				 * AOP @EnableAspectJAutoProxy 为容器中导入了 AnnotationAwareAspectJAutoProxyCreator
 				 * 事务注解 @EnableTransactionManagement 为容器导入了 InfrastructureAdvisorAutoProxyCreator
-				 * 都是实现了 BeanPostProcessor 接口, InstantiationAwareBeanPostProcessor
-				 * 进行后置处理解析切面
+				 * 都是实现了 BeanPostProcessor 接口, InstantiationAwareBeanPostProcessor 进行后置处理解析切面
 				 */
 				Object result = ibp.postProcessBeforeInstantiation(beanClass, beanName);
 				if (result != null) {

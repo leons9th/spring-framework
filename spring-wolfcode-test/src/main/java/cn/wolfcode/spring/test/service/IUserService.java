@@ -7,4 +7,8 @@ package cn.wolfcode.spring.test.service;
 public interface IUserService {
 
 	void test();
+
+	void login(String username, String password);
+
+	void register(String mobile);
 }

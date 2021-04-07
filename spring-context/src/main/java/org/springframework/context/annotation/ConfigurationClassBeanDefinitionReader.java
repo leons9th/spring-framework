@@ -152,6 +152,7 @@ class ConfigurationClassBeanDefinitionReader {
 		// 加载从 @ImportResource 引入进来的 Bean 定义
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
 		// 加载从 ImportBeanDefinitionRegistrar 引入的 Bean 定义
+		// 执行事物的自动代理注册器 AutoProxyRegistrar
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
