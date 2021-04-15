@@ -10,8 +10,8 @@ import java.util.Arrays;
  * @author Leon
  * @date 2021/3/30
  */
-@Aspect
-@Component
+//@Aspect
+//@Component
 public class UserLogAspect {
 
 	@Pointcut("execution(* cn.wolfcode.spring.test.service.impl.*.*(..))")

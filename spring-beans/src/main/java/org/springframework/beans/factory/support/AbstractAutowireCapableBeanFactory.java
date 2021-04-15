@@ -1022,9 +1022,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				// 判断后置处理器是不是实现了 SmartInstantiationAwareBeanPostProcessor 接口
 				if (bp instanceof SmartInstantiationAwareBeanPostProcessor) {
-					//进行强制转换
+					// 进行强制转换
 					SmartInstantiationAwareBeanPostProcessor ibp = (SmartInstantiationAwareBeanPostProcessor) bp;
-					//挨个调用 SmartInstantiationAwareBeanPostProcessor 的 getEarlyBeanReference
+					// 挨个调用 SmartInstantiationAwareBeanPostProcessor 的 getEarlyBeanReference
+					// 此处的调用分别有两个实现，一个是普通 bean 的调用，直接返回早期对象，还有一个是 aop bean 的调用，返回 aop 代理对象
 					exposedObject = ibp.getEarlyBeanReference(exposedObject, beanName);
 				}
 			}

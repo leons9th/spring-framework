@@ -5,14 +5,16 @@ import cn.wolfcode.spring.test.event.PayFailedEvent;
 import cn.wolfcode.spring.test.event.PaySuccessEvent;
 import cn.wolfcode.spring.test.service.IUserService;
 import com.alibaba.druid.pool.DruidDataSource;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
@@ -20,27 +22,24 @@ import java.math.BigDecimal;
 /**
  * 启用 aspectj 代理
  *
- * @author hox
+ * @author Leon
  */
-@EnableTransactionManagement
-@EnableAspectJAutoProxy
+//@EnableTransactionManagement
+//@EnableAspectJAutoProxy(exposeProxy = true)
 @Configuration
 @ComponentScan(basePackages = "cn.wolfcode.spring.test")
-/**
- * @author Leon
- * @date 2021/3/16
- */
 public class AppConfig {
-//
+
 //	@Bean(initMethod = "init", destroyMethod = "destroy")
 //	public User user() {
 //		return new User("test", "123456");
 //	}
 //
 //	@Bean
+//	@Scope("prototype")
 //	public IUserService userService() {
 //		UserServiceImpl userService = new UserServiceImpl();
-//		userService.setUser(user());
+//		userService.setUser(this.user());
 //		return userService;
 //	}
 
@@ -87,11 +86,35 @@ public class AppConfig {
 		for (String beanDefinitionName : beanDefinitionNames) {
 			System.out.println(beanDefinitionName);
 		}
+		System.out.println();
 
-		IUserService bean = ctx.getBean(IUserService.class);
-		IUserService bean1 = ctx.getBean(IUserService.class);
-		System.out.println("=================>>>>>>" + (bean == bean1));
-		bean.test();
+		System.out.println("------------------------------ 早期 aop 测试：开始 ------------------------------");
+//		IUserService userServiceProxy = ctx.getBean("userServiceProxy", IUserService.class);
+//		// 默认的 advice 会对所有方法进行代理
+//		// userServiceProxy.login("test", "aoppppppp");
+//
+//		// 启用方法匹配后：会被代理
+//		userServiceProxy.login("test", "aoppppppp");
+//		// 启用方法匹配后：因为没有配置，所以不会被代理
+//		userServiceProxy.test();
+
+		// 启用自动代理后，我们不需要再去获取特殊的 proxyBean，而是直接获取我们真正使用的 bean
+		IUserService userService = ctx.getBean("userServiceImpl", IUserService.class);
+		userService.test();
+
+		System.out.println("------------------------------ 早期 aop 测试：接触 ------------------------------");
+
+		System.out.println();
+
+		// aop 测试 -----------------------
+//		System.out.println("------------------------------ aop 测试：开始 ------------------------------");
+//		IUserService bean = (IUserService) ctx.getBean("userServiceImpl");
+//		IUserService bean1 = (IUserService) ctx.getBean("userServiceImpl");
+//		System.out.println("=================>>>>>>" + (bean == bean1));
+//		bean.test();
+//		System.out.println("------------------------------ aop 测试：结束 ------------------------------");
+
+		System.out.println();
 
 		// 自己添加的注册器
 //		ctx.addApplicationListener(new PaySuccessListener());

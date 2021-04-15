@@ -2,10 +2,8 @@ package cn.wolfcode.spring.test.service.impl;
 
 import cn.wolfcode.spring.test.domain.User;
 import cn.wolfcode.spring.test.service.IUserService;
-import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Leon
@@ -18,15 +16,8 @@ public class UserServiceImpl implements IUserService {
 	private User user;
 
 	@Override
-	@Transactional(rollbackFor = Exception.class)
 	public void test() {
-		System.out.println("获取到的user：" + user);
-		try {
-			IUserService currentProxy = (IUserService) AopContext.currentProxy();
-			currentProxy.login("xxxx", "admin");
-		} catch (IllegalStateException e) {
-			login("xxxx", "admin");
-		}
+//		System.out.println("获取到的user：" + user);
 		System.out.println("Ioc加载流程测试...");
 	}
 

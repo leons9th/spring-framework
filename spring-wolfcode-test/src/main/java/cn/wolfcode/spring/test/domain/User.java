@@ -2,6 +2,7 @@ package cn.wolfcode.spring.test.domain;
 
 import cn.wolfcode.spring.test.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,7 +15,8 @@ public class User {
 	private String test = "111";
 
 	@Autowired
-	private IUserService userService;
+	@Qualifier("userServiceImpl")
+	private IUserService userServiceImpl;
 
 	public User() {
 		System.out.println("创建了 User:无参构造器......");

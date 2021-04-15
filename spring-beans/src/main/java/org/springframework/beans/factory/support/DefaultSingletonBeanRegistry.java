@@ -282,7 +282,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
 				/**
-				 * 标记当前的bean马上就要被创建了
+				 * 标记当前的 bean 马上就要被创建了
 				 * singletonsCurrentlyInCreation 在这里会把beanName加入进来，若第二次循环依赖（构造器注入会抛出异常）
 				 */
 				beforeSingletonCreation(beanName);
