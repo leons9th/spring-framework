@@ -5,16 +5,14 @@ import cn.wolfcode.spring.test.event.PayFailedEvent;
 import cn.wolfcode.spring.test.event.PaySuccessEvent;
 import cn.wolfcode.spring.test.service.IUserService;
 import com.alibaba.druid.pool.DruidDataSource;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.*;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
@@ -24,8 +22,8 @@ import java.math.BigDecimal;
  *
  * @author Leon
  */
-//@EnableTransactionManagement
-//@EnableAspectJAutoProxy(exposeProxy = true)
+@EnableTransactionManagement
+@EnableAspectJAutoProxy(exposeProxy = true)
 @Configuration
 @ComponentScan(basePackages = "cn.wolfcode.spring.test")
 public class AppConfig {
@@ -90,8 +88,9 @@ public class AppConfig {
 
 		System.out.println("------------------------------ 早期 aop 测试：开始 ------------------------------");
 //		IUserService userServiceProxy = ctx.getBean("userServiceProxy", IUserService.class);
-//		// 默认的 advice 会对所有方法进行代理
-//		// userServiceProxy.login("test", "aoppppppp");
+////		// 默认的 advice 会对所有方法进行代理
+//		 userServiceProxy.login("test", "aoppppppp");
+//		 userServiceProxy.test();
 //
 //		// 启用方法匹配后：会被代理
 //		userServiceProxy.login("test", "aoppppppp");
@@ -99,20 +98,20 @@ public class AppConfig {
 //		userServiceProxy.test();
 
 		// 启用自动代理后，我们不需要再去获取特殊的 proxyBean，而是直接获取我们真正使用的 bean
-		IUserService userService = ctx.getBean("userServiceImpl", IUserService.class);
-		userService.test();
+//		IUserService userService = ctx.getBean(IUserService.class);
+//		userService.login("test", "aoppppppp");
 
 		System.out.println("------------------------------ 早期 aop 测试：接触 ------------------------------");
 
 		System.out.println();
 
 		// aop 测试 -----------------------
-//		System.out.println("------------------------------ aop 测试：开始 ------------------------------");
-//		IUserService bean = (IUserService) ctx.getBean("userServiceImpl");
+		System.out.println("------------------------------ aop 测试：开始 ------------------------------");
+		IUserService bean = (IUserService) ctx.getBean("userServiceImpl");
 //		IUserService bean1 = (IUserService) ctx.getBean("userServiceImpl");
 //		System.out.println("=================>>>>>>" + (bean == bean1));
-//		bean.test();
-//		System.out.println("------------------------------ aop 测试：结束 ------------------------------");
+		bean.test();
+		System.out.println("------------------------------ aop 测试：结束 ------------------------------");
 
 		System.out.println();
 

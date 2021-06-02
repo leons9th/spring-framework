@@ -413,6 +413,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Object result = existingBean;
 		/**
 		 * 获取容器中的所有后置处理器
+		 * @PostConstruct 注解的解析
+		 * 以及各种 Aware 处理器的调用，如 ApplicationContextAwareProcessor、ServletContextAwareProcessor 等
 		 */
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
 			Object current = processor.postProcessBeforeInitialization(result, beanName);
@@ -1178,8 +1180,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				Class<?> targetType = determineTargetType(beanName, mbd);
 				if (targetType != null) {
 					/**
-					 * 后置处理器的【第一次】调用 总共有九处调用 事务在这里不会被调用，aop的才会被调用
-					 * 为啥aop在这里调用了，因为在此处需要解析出对应的切面报错到缓存中
+					 * 后置处理器的【第一次】调用 总共有九处调用 事务在这里不会被调用，aop 的才会被调用
+					 * 为啥 aop 在这里调用了，因为在此处需要解析出对应的切面保存到缓存中
 					 */
 					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
 					//若InstantiationAwareBeanPostProcessors后置处理器的postProcessBeforeInstantiation返回不为null
@@ -1295,8 +1297,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		//有没有必须进行依赖注入
 		boolean autowireNecessary = false;
 		/**
-		 * 通过getBean传入进来的构造函数是否来指定需要推断构造函数
-		 * 若传递进来的args不为空，那么就可以直接选出对应的构造函数
+		 * 通过 getBean 传入进来的构造函数是否来指定需要推断构造函数
+		 * 若传递进来的 args 不为空，那么就可以直接选出对应的构造函数
 		 */
 		if (args == null) {
 			synchronized (mbd.constructorArgumentLock) {
@@ -1304,7 +1306,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				if (mbd.resolvedConstructorOrFactoryMethod != null) {
 					//修改已经解析过的构造函数的标志
 					resolved = true;
-					//修改标记为true 标识构造函数或者工厂方法已经解析过
+					//修改标记为 true 标识构造函数或者工厂方法已经解析过
 					autowireNecessary = mbd.constructorArgumentsResolved;
 				}
 			}
@@ -1529,13 +1531,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// to support styles of field injection.
 		// 是否持有 InstantiationAwareBeanPostProcessor
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
-			//获取容器中的所有的BeanPostProcessor
+			// 获取容器中的所有的BeanPostProcessor
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
-				//判断后置处理器是不是InstantiationAwareBeanPostProcessor
+				// 判断后置处理器是不是InstantiationAwareBeanPostProcessor
 				if (bp instanceof InstantiationAwareBeanPostProcessor) {
-					//进行强制转化
+					// 进行强制转化
 					InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
-					//若存在后置处理器给属性赋值了，那么返回 false 可以来修改开关变量，就不会走下面的逻辑了
+					// 若存在后置处理器给属性赋值了，那么返回 false 可以来修改开关变量，就不会走下面的逻辑了
 					if (!ibp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
 						return;
 					}
@@ -1593,7 +1595,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 						if (filteredPds == null) {
 							filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
 						}
-						//对依赖对象进行后置处理
+						// 对依赖对象进行后置处理
 						pvsToUse = ibp.postProcessPropertyValues(pvs, filteredPds, bw.getWrappedInstance(), beanName);
 						if (pvsToUse == null) {
 							return;
@@ -1603,7 +1605,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				}
 			}
 		}
-		//判断是否检查依赖
+		// 判断是否检查依赖
 		if (needsDepCheck) {
 			if (filteredPds == null) {
 				filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
@@ -2015,18 +2017,18 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}, getAccessControlContext());
 		}
 		else {
-			//若bean实现了XXXAware接口进行方法的回调
+			//若 bean 实现了 XXXAware 接口进行方法的回调
 			invokeAwareMethods(beanName, bean);
 		}
 
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
-			// 调用bean的后置处理器的 postProcessorsBeforeInitialization 方法 @PostConstruct 注解的方法
+			// 调用 bean 的后置处理器的 postProcessorsBeforeInitialization 方法 @PostConstruct 注解的方法
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
 		try {
-			//调用初始化方法
+			// 调用初始化方法
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		}
 		catch (Throwable ex) {
@@ -2035,7 +2037,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Invocation of init method failed", ex);
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
-			//调用bean的后置处理器的PostProcessorsAfterInitialization方法
+			// 调用 bean 的后置处理器的 PostProcessorsAfterInitialization 方法
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
 

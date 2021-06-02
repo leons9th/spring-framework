@@ -264,8 +264,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			}
 			/**
 			 * 注意看重写方法
-			 * 判断是不是基础的 bean（是不是切面类、通知、切点等）
-			 * 判断是不是应该跳过, 默认 false（切面解析也在其中）
+			 * isInfrastructureClass：判断是不是基础的 bean（是不是切面类、通知、切点等）
+			 * shouldSkip：判断是不是应该跳过, 默认 false（TODO 切面解析也在其中）
 			 */
 			if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
 				this.advisedBeans.put(cacheKey, Boolean.FALSE);
@@ -331,6 +331,22 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			}
 		}
 		return bean;
+	}
+
+	/**
+	 * Subclasses should override this method to return {@code true} if the
+	 * given bean should not be considered for auto-proxying by this post-processor.
+	 * <p>Sometimes we need to be able to avoid this happening, e.g. if it will lead to
+	 * a circular reference or if the existing target instance needs to be preserved.
+	 * This implementation returns {@code false} unless the bean name indicates an
+	 * "original instance" according to {@code AutowireCapableBeanFactory} conventions.
+	 * @param beanClass the class of the bean
+	 * @param beanName the name of the bean
+	 * @return whether to skip the given bean
+	 * @see org.springframework.beans.factory.config.AutowireCapableBeanFactory#ORIGINAL_INSTANCE_SUFFIX
+	 */
+	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
+		return AutoProxyUtils.isOriginalInstance(beanName, beanClass);
 	}
 
 
@@ -422,22 +438,6 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			logger.trace("Did not attempt to auto-proxy infrastructure class [" + beanClass.getName() + "]");
 		}
 		return retVal;
-	}
-
-	/**
-	 * Subclasses should override this method to return {@code true} if the
-	 * given bean should not be considered for auto-proxying by this post-processor.
-	 * <p>Sometimes we need to be able to avoid this happening, e.g. if it will lead to
-	 * a circular reference or if the existing target instance needs to be preserved.
-	 * This implementation returns {@code false} unless the bean name indicates an
-	 * "original instance" according to {@code AutowireCapableBeanFactory} conventions.
-	 * @param beanClass the class of the bean
-	 * @param beanName the name of the bean
-	 * @return whether to skip the given bean
-	 * @see org.springframework.beans.factory.config.AutowireCapableBeanFactory#ORIGINAL_INSTANCE_SUFFIX
-	 */
-	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
-		return AutoProxyUtils.isOriginalInstance(beanName, beanClass);
 	}
 
 	/**
